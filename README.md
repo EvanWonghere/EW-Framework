@@ -9,7 +9,7 @@
 
 当前仓库处于 **文档驱动规划阶段**：
 
-- 已有：`SO EventBus` 基础能力（`Assets/EW_Framework/Core/SOEventBus/`）
+- 已有：`SO EventBus` 基础能力（`Assets/EW_Framework/Core/SOEventBus/`）、`SharedVariables` 共享变量与可选持久化（`Assets/EW_Framework/Core/SharedVariables/`，见模块内 README）
 - 规划中：Ability、Attribute、Effect、Tag、Combat 模块规格与 Demo 设计
 - 待落地：模块代码实现与 Demo 场景实现
 
@@ -115,7 +115,7 @@ Demo -> Modules -> Core
 以下内容暂不纳入当前阶段交付：
 
 - 网络同步（多人联机）
-- 存档系统（Save/Load）
+- **完整**存档系统（Save/Load 管线、多槽位、云同步等）；Core 层提供 `ISaveable` 与 SharedVariables 的预留持久化能力，供后续接入
 - 完整 AI 行为系统
 - 美术表现深度打磨（高级 VFX/SFX/动画管线）
 
@@ -135,7 +135,7 @@ A: 目前已完成 Demo 设计文档，后续按 `Docs/Planning/EWF_DEMO_DESIGN.
 
 ### Q4: 现有可复用资产是什么？
 
-A: 目前最稳定的基建是 `SO EventBus`，位于 `Assets/EW_Framework/Core/SOEventBus/`。
+A: 目前可复用的基建包括：`SO EventBus`（`Assets/EW_Framework/Core/SOEventBus/`）、`SharedVariables`（`Assets/EW_Framework/Core/SharedVariables/`，含共享变量与可选 `ISaveable` 持久化）。
 
 ### Q5: 如果我要新增模块，第一步做什么？
 
