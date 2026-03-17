@@ -111,6 +111,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Unity scene recovery backups (Editor-only, not needed in VCS)
+/Assets/_Recovery/
+/Assets/_Recovery.meta
+
 # Vim
 *.swp
 *.swo
