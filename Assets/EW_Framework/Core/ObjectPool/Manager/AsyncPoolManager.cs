@@ -26,9 +26,6 @@ namespace EW_Framework.Core.ObjectPool.Manager
 
         // GUID -> composite structure containing the pool and memory handle
         private readonly Dictionary<string, AsyncPoolData> _asyncPools = new();
-        // Instance -> corresponding GUID (used for recycling)
-        private readonly Dictionary<GameObject, string> _instanceToGuidMap = new();
-        // GUID -> ongoing pool creation task (to avoid duplicate Addressables loads under concurrent requests)
         private readonly Dictionary<string, UniTask<AsyncPoolData>> _creatingTasks = new();
 
         [Header("Lifecycle Settings")]
@@ -103,8 +100,11 @@ namespace EW_Framework.Core.ObjectPool.Manager
             instance.transform.SetPositionAndRotation(position, rotation);
             if (parent != null) instance.transform.SetParent(parent);
 
-            // 3. Record the bloodline
-            _instanceToGuidMap[instance] = guid;
+            if (!instance.TryGetComponent<PoolItem>(out var poolItem))
+            {
+                poolItem = instance.AddComponent<PoolItem>();
+            }
+            poolItem.Pool = poolData.Pool;
 
             // 4. Trigger the interface
             foreach (var p in instance.GetComponentsInChildren<IPoolable>())
@@ -127,16 +127,15 @@ namespace EW_Framework.Core.ObjectPool.Manager
                 p.OnDespawn();
             }
 
-            if (_instanceToGuidMap.TryGetValue(instance, out var guid))
+            if (instance.TryGetComponent<PoolItem>(out var poolItem) && poolItem.Pool != null)
             {
-                if (_asyncPools.TryGetValue(guid, out var poolData))
-                {
-                    poolData.Pool.Release(instance);
-                    return;
-                }
+                poolItem.Pool.Release(instance);
+                return;
             }
-
-            Destroy(instance);
+            else
+            {
+                Destroy(instance);
+            }
         }
 
         private async UniTask<AsyncPoolData> CreateAsyncPool(AssetReference assetRef, string guid)
@@ -210,7 +209,10 @@ namespace EW_Framework.Core.ObjectPool.Manager
             foreach (var poolData in _asyncPools.Values)
             {
                 // 1. Empty the pool of instantiated GameObject
-                poolData.Pool.Clear();
+                if (poolData.Pool is System.IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
                 
                 // 2. Core: Release the resource handle of Addressables, completely unload the textures and models from memory!
                 if (poolData.PrefabHandle.IsValid())
@@ -226,7 +228,6 @@ namespace EW_Framework.Core.ObjectPool.Manager
             }
 
             _asyncPools.Clear();
-            _instanceToGuidMap.Clear();
             _creatingTasks.Clear();
 
             Debug.Log("[AsyncPoolManager] Asynchronous object pool has been cleared, Addressables memory has been released.");

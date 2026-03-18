@@ -18,9 +18,6 @@ namespace EW_Framework.Core.ObjectPool.Manager
         // Core dictionary 1: Prefab -> corresponding object pool
         private readonly Dictionary<GameObject, IObjectPool<GameObject>> _prefabPools = new();
 
-        // Core dictionary 2: Instance (Instance) -> its Prefab (used for tracking the source when recycling)
-        private readonly Dictionary<GameObject, GameObject> _instanceToPrefabMap = new();
-
         [Header("Lifecycle Settings")]
         [Tooltip("Whether to automatically clear the object pool when the scene is unloaded? (if multiple scenes are loaded Additively, please be cautious to turn on)")]
         public bool autoClearOnSceneUnload = false;
@@ -68,15 +65,18 @@ namespace EW_Framework.Core.ObjectPool.Manager
 
             // 2. Get the object from the pool (the official底层 will automatically handle whether to take the old or new one)
             GameObject instance = pool.Get();
-            
+
             // 3. Set Transform information
             instance.transform.SetPositionAndRotation(position, rotation);
             if (parent != null) instance.transform.SetParent(parent);
 
-            // 4. Record the "bloodline" of this instance, for easy tracking when recycling
-            _instanceToPrefabMap[instance] = prefab;
+            if (!instance.TryGetComponent<PoolItem>(out var poolItem))
+            {
+                poolItem = instance.AddComponent<PoolItem>();
+            }
+            poolItem.Pool = pool;
 
-            // 5. Trigger the custom lifecycle interface (notify the object "you are on duty")
+            // 4. Trigger the custom lifecycle interface (notify the object "you are on duty")
             var poolables = instance.GetComponentsInChildren<IPoolable>();
             foreach (var p in poolables)
             {
@@ -100,18 +100,15 @@ namespace EW_Framework.Core.ObjectPool.Manager
                 p.OnDespawn();
             }
 
-            // 2. Find its "bloodline" and put it back in the corresponding pool
-            if (_instanceToPrefabMap.TryGetValue(instance, out var prefab))
+            if (instance.TryGetComponent<PoolItem>(out var poolItem) && poolItem.Pool != null)
             {
-                if (_prefabPools.TryGetValue(prefab, out var pool))
-                {
-                    pool.Release(instance);
-                    return;
-                }
+                poolItem.Pool.Release(instance);
+                return;
             }
-
-            // Fallback mechanism: if this object is not from the pool (e.g. hand-placed in the scene), destroy it directly
-            Destroy(instance);
+            else
+            {
+                Destroy(instance);
+            }
         }
 
         // Wrap the official Unity pooling logic
@@ -137,15 +134,17 @@ namespace EW_Framework.Core.ObjectPool.Manager
         /// </summary>
         public void ClearAllPools()
         {
-            // 1. Call the official Unity's Clear(), this will trigger actionOnDestroy to completely destroy all GameObjects in standby state
+            // 1. Dispose pools to destroy all pooled GameObjects (via actionOnDestroy)
             foreach (var pool in _prefabPools.Values)
             {
-                pool.Clear(); 
+                if (pool is System.IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
             }
 
             // 2. Clear the dictionary references
             _prefabPools.Clear();
-            _instanceToPrefabMap.Clear();
 
             // 3. Clean up the empty nodes as parent nodes
             foreach (Transform child in transform)
