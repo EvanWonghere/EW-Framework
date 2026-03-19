@@ -4,6 +4,14 @@
 
 本规格用于统一后续实现语义。它定义“模块该做什么、不该做什么”，避免先编码后统一导致的返工。
 
+## 1.1 与当前实现现状的关系（Core 已落地）
+
+- 当前仓库的 `Core` 基建已落地（`SOEventBus`、`ObjectPool`、`TimerSystem`、`SharedVariables`、`StateMachine`、`Singleton` 等）。
+- 后续 `Modules`（Ability/Attribute/Effect/Tag/Combat）实现应**优先复用**上述基建：
+  - 跨模块可观测与解耦通信：优先使用 `SOEventBus`（Event Channel / SafeEvent）。
+  - 周期与延迟驱动：优先使用 `TimerSystem`，避免每个模块自建计时 Update 管线。
+  - 高频对象创建：优先使用 `ObjectPool`（含纯 C# 引用池）减少 GC。
+
 ---
 
 ## 2) Ability 模块规格
@@ -173,6 +181,7 @@ stateDiagram-v2
 - 所有“激活失败/应用失败/命中失败”都必须有可解释原因。
 - 对空目标、无效配置、重复触发等边界输入必须定义行为。
 - 失败应可日志化与可视化（供 Demo 调试与后续测试）。
+- 建议关键状态变化与失败原因通过 EventBus 可观测（便于 Demo/HUD 订阅与回放）。
 
 ---
 

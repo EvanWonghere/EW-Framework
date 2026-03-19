@@ -3,7 +3,7 @@
 ## 1) 项目定位与阶段结论
 
 - 定位：该仓库目标是 `Unity + C#` 的可复用 Gameplay Framework 模板，并兼具 Gameplay Ability Showcase。
-- 当前阶段：处于早期基建阶段，已有 `SO EventBus`，尚未形成 Ability/Effect/Tag/Combat 的系统化模块。
+- 当前阶段：处于实现推进阶段，**Core 基建已落地**（`ObjectPool` / `SharedVariables` / `Singleton` / `SOEventBus` / `StateMachine` / `TimerSystem`），尚未形成 Ability/Effect/Tag/Combat 的系统化 Modules 与正式 Demo 场景体系。
 - 盘点结论：适合采用“文档先行 -> 模块落地 -> Demo 场景化展示”的推进方式。
 
 ## 2) 环境与依赖基线
@@ -20,15 +20,21 @@
 ## 3) 目录与资产现状
 
 - 业务核心目录：`Assets/EW_Framework/`
-  - `Core/`：已存在 `SOEventBus`
-  - `Modules/`：当前空（或仅占位）
-  - `Utils/`：当前空（或仅占位）
+  - `Core/`：已落地多项可复用基建：
+    - `Assets/EW_Framework/Core/ObjectPool/`
+    - `Assets/EW_Framework/Core/SharedVariables/`
+    - `Assets/EW_Framework/Core/Singleton/`
+    - `Assets/EW_Framework/Core/SOEventBus/`
+    - `Assets/EW_Framework/Core/StateMachine/`
+    - `Assets/EW_Framework/Core/TimerSystem/`
+  - `Modules/`：尚未落地稳定领域模块（Ability/Attribute/Effect/Tag/Combat 仍以规格为主）
+  - `Utils/`：按需补充，当前不作为阶段性重点
 - 场景现状：
-  - 仅发现 `Assets/Scenes/SampleScene.unity`
-  - 暂无 `Demo`/`Showcase` 场景体系
+  - `Assets/Scenes/SampleScene.unity` 作为默认场景仍存在
+  - Core 子模块均提供可运行的 Examples 场景（用于验证 API 与最佳实践），但**尚无**按 `Demo_<Domain>_<Topic>` 组织的正式 Gameplay Demo 场景体系
 - 文档现状：
-  - 项目根目录尚无正式 `README.md`
-  - 当前缺少面向外部读者与开发者 onboarding 的主文档
+  - 项目根目录 `README.md` 已作为对外入口，区分“已实现 Core”与“规划 Modules/Demo”
+  - `Docs/Planning/` 作为“当前事实 + 当前规划”的集合持续维护
 
 ## 4) 已有能力（可复用资产）
 
@@ -43,13 +49,53 @@
 - 编辑器辅助：
   - 运行时触发按钮与监听数显示
 
-## 4.2 设计质量简评
+## 4.2 ObjectPool（同步/异步对象池 + 引用池）
+
+- 基于 Unity `IObjectPool<T>` 的 GameObject 池（同步）与 Addressables 异步池（以 `AssetReference` 为 key）。
+- 提供纯 C# `ReferencePoolManager`（Acquire/Release），配合 `IReference<T>.OnReturnPool()` 归还回调以清理字段引用。
+- 入口与说明：
+  - `Assets/EW_Framework/Core/ObjectPool/README.md`
+  - `Assets/EW_Framework/Core/ObjectPool/Examples/README.md`
+
+## 4.3 SharedVariables（共享变量 + 可选持久化）
+
+- ScriptableObject 驱动的共享变量（类型化 SO 资产），提供变更事件与可选持久化接口 `ISaveable`。
+- Examples 提供监听、修改、以及基于 PlayerPrefs 的简单 Save/Load 演示（用于验证语义，不绑定最终存档方案）。
+- 入口与说明：
+  - `Assets/EW_Framework/Core/SharedVariables/README.md`
+  - `Assets/EW_Framework/Core/SharedVariables/Examples/README.md`
+
+## 4.4 Singleton（纯 C# / MonoBehaviour 单例基类）
+
+- `Singleton<T>`（纯 C# 懒加载）+ `MonoSingleton<T>`（场景级）+ `PersistentMonoSingleton<T>`（跨场景常驻）。
+- 统一基础设施管理器的单例写法（如对象池、计时器管理器）。
+- 入口与说明：
+  - `Assets/EW_Framework/Core/Singleton/README.md`
+
+## 4.5 StateMachine（轻量泛型 FSM）
+
+- 泛型 FSM，按状态类型缓存实例；支持 `ChangeState` 与堆栈式 `Push/Pop`（Pause/Resume 语义）。
+- Examples 提供可运行场景，演示 Input System + HUD 可视化与切换原因记录。
+- 入口与说明：
+  - `Assets/EW_Framework/Core/StateMachine/README.md`
+  - `Assets/EW_Framework/Core/StateMachine/Examples/README.md`
+
+## 4.6 TimerSystem（全局 Timer 管理）
+
+- `TimerManager` + `Timer` 句柄：Delay/Loop、Pause/Resume/Cancel、Scaled/Unscaled。
+- 与 `ObjectPool` 的 `ReferencePoolManager` 集成，复用 Timer 以降低 GC。
+- Examples 提供可运行场景，演示 timeScale 影响与 ClearAll 的安全性。
+- 入口与说明：
+  - `Assets/EW_Framework/Core/TimerSystem/README.md`
+  - `Assets/EW_Framework/Core/TimerSystem/Examples/README.md`
+
+## 4.7 设计质量简评
 
 - 优点：
-  - 事件式通信已具备，适合后续模块解耦。
-  - 类型化 channel 命名明确，便于团队协作与资产管理。
+  - 事件式通信与基础设施（对象池/计时器/共享变量/FSM）已具备，适合后续模块解耦与可观测性建设。
+  - 类型化资产与统一基类降低样板代码，便于团队协作与资产管理。
 - 约束：
-  - 目前仍是“单一基建点”，尚未形成 gameplay 领域模型（Ability/Effect/Tag）。
+  - 目前仍以 Core 基建为主，尚未形成 gameplay 领域模型（Ability/Effect/Tag/Combat/Attribute）的运行时闭环。
 
 ## 5) 缺口清单（按优先级）
 
@@ -67,7 +113,7 @@
 ## P2 缺口（展示与传播）
 
 - Demo 场景剧本化设计（可重复演示）
-- README 与术语体系（对外解释成本）
+- 将规划文档与实现现状持续对齐（避免读者误判成熟度）
 
 ## 6) 风险与技术债
 

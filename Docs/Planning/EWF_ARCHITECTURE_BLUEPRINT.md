@@ -19,6 +19,15 @@
 - `Assets/EW_Framework/Documentation/`（可选）
   - 模块规格、设计决策记录、演示脚本
 
+现状注记（当前仓库已落地的 Core 子模块）：
+
+- `Assets/EW_Framework/Core/ObjectPool/`
+- `Assets/EW_Framework/Core/SharedVariables/`
+- `Assets/EW_Framework/Core/Singleton/`
+- `Assets/EW_Framework/Core/SOEventBus/`
+- `Assets/EW_Framework/Core/StateMachine/`
+- `Assets/EW_Framework/Core/TimerSystem/`
+
 ## 3) 依赖方向规则（必须遵守）
 
 ## 3.1 单向依赖
@@ -31,8 +40,10 @@
 
 - 跨模块通信优先使用：
   1) 抽象接口（编译期契约）
-  2) Event Channel（运行期解耦）
+  2) Event Channel（运行期解耦，见 `Assets/EW_Framework/Core/SOEventBus/README.md`）
 - 不允许跨模块直接访问“内部状态对象”，只能通过公开 API 或事件。
+
+补充：当希望“一个 ScriptableObject 聚合多个事件”时，可采用 `SafeEvent / SafeVoidEvent`（同样在 `Core/SOEventBus` 内提供与示例说明），避免为每个事件都创建独立 Channel 资产。
 
 ## 4) 领域分层（逻辑视图）
 
@@ -55,6 +66,7 @@ flowchart TD
 - `Core`：
   - 只提供基础能力，不承载玩法语义。
   - 可长期稳定，变更需高门槛。
+  - 现已包含：EventBus、对象池（含引用池）、共享变量、单例基类、FSM、计时器等运行时基建。
 - `AbilitySystem`：
   - 技能激活、生命周期、冷却、取消/打断规则。
 - `Attribute`：

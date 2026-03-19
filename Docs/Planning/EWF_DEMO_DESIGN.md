@@ -14,6 +14,20 @@
 | `Demo_Effect_Stacking` | 展示效果叠层与持续行为 | Effect + Attribute + EventBus |
 | `Demo_Combat_Interaction` | 展示战斗交互与门控协作 | Combat + Ability + Tag + Attribute |
 
+## 2.1 Core Examples（已可运行）
+
+除上述“Gameplay Demo（规划）”外，当前仓库的 Core 子模块已提供可直接运行的 Examples 场景，用于验证子模块 API 与最佳实践（不承载正式 Demo 叙事与业务规则）：
+
+- `Assets/EW_Framework/Core/ObjectPool/Examples/ObjectPoolDemo.unity`
+- `Assets/EW_Framework/Core/SOEventBus/Examples/EventBusDemo.unity`
+- `Assets/EW_Framework/Core/SharedVariables/Examples/SharedVariablesDemo.unity`
+- `Assets/EW_Framework/Core/StateMachine/Examples/StateMachineExampleDemo.unity`
+- `Assets/EW_Framework/Core/TimerSystem/Examples/TimerSystemDemo.unity`
+
+定位说明：
+
+- Examples 仅用于“子模块自证”（API 语义、边界行为、最佳实践），正式 Gameplay Demo 仍以 `Demo_<Domain>_<Topic>` 命名并建议放到 `Assets/EW_Framework/Demo/`，以满足 `Demo -> Modules -> Core` 的依赖方向与叙事组织。
+
 ---
 
 ## 3) Demo_Ability_Basics
