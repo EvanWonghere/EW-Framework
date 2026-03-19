@@ -20,6 +20,11 @@
 - Input: Input System (`com.unity.inputsystem`)
 - Test: Unity Test Framework (`com.unity.test-framework`)
 
+## 输入系统约定（Input System）
+
+- 本仓库 **统一使用新版 Input System**（`com.unity.inputsystem`），包括 Core 模块下的 `Examples/` 示例脚本。
+- 示例脚本应优先使用 `UnityEngine.InputSystem.InputAction`（在 `OnEnable/OnDisable` 中 Enable/Disable，在 `OnDestroy` 中 Dispose），避免使用旧版 `Input.GetKey*` API。
+
 ## 目录规划（目标态）
 
 `Assets/EW_Framework/` 采用以下分层：
