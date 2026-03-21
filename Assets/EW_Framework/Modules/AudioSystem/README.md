@@ -21,6 +21,7 @@ Assets/EW_Framework/Modules/AudioSystem/
       AudioPlayer.cs
       AudioRequests.cs
       AudioRequestChannelSO.cs
+      AudioRequestListener.cs
       AudioRequestRaiser.cs
     Prefabs/
       SFX_Player.prefab
@@ -43,6 +44,21 @@ Assets/EW_Framework/Modules/AudioSystem/
    - 对象池：`SyncPoolManager.Instance` 可用
    - 计时器：`TimerManager.Instance` 可用
 4. **业务侧发命令**：对同一 `AudioRequestChannelSO` 调用 `Raise(cmd)`。
+
+## Listener / Raiser（可选，Inspector 友好）
+
+与 Core 层 **SOEventBus**（`GameEventListener<T>` / `GameEventRaiser<T>`）对齐，本模块提供：
+
+| 类型 | 作用 |
+|------|------|
+| `AudioRequestRaiser` | 在 GameObject 上指定 `AudioRequestChannelSO`，在逻辑里调用 `Raise(AudioCommand)`，把「往哪个通道发」固定在场景 / Prefab 上。 |
+| `AudioRequestListener` | 订阅同一通道，用 Inspector 里的 `UnityEvent<AudioCommand>` 配置响应，无需手写 `RegisterListener` / `UnregisterListener`。 |
+
+详细约定见：`Assets/EW_Framework/Core/SOEventBus/README.md`。
+
+**二者都是可选的**：只持有通道资产并在代码里 `Raise` / `RegisterListener` 也能跑通全流程。框架仍提供这两个薄封装，是为了让 **策划、关卡、美术、技术美术等少写 C#、多在 Inspector 里绑资源与回调**——这也是 Event Channel 在本项目里希望覆盖的协作方式；若只用 `AudioRequestChannelSO` 而从不使用 Raiser / Listener，会少掉这一层对非程序角色的友好度。
+
+**与 `AudioManager` 的关系**：播放与调度仍由场景中的 `AudioManager` 通过代码订阅通道完成。`AudioRequestListener` 适合 **并行** 监听（调试面板、埋点、旁路逻辑等），不要用它再实现一套与 `AudioManager` 重复的播放职责。
 
 ## 核心数据结构
 
