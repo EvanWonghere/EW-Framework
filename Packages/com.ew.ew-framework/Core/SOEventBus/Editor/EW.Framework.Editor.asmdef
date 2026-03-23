@@ -1,0 +1,18 @@
+{
+  "name": "EW.Framework.Editor",
+  "rootNamespace": "EW_Framework",
+  "references": [
+    "EW.Framework.Core"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

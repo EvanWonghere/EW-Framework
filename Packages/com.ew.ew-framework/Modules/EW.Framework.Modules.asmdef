@@ -1,0 +1,16 @@
+{
+  "name": "EW.Framework.Modules",
+  "rootNamespace": "EW_Framework",
+  "references": [
+    "EW.Framework.Core"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

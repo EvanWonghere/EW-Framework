@@ -1,0 +1,47 @@
+{
+  "name": "com.ew.ew-framework",
+  "version": "0.1.0",
+  "displayName": "EW Framework",
+  "description": "Gameplay framework: ObjectPool, SharedVariables, Singleton, SOEventBus, StateMachine, TimerSystem, and optional modules (e.g. AudioSystem).",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.addressables": "2.9.1",
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  },
+  "samples": [
+    {
+      "displayName": "Core — ObjectPool",
+      "description": "同步/异步对象池演示场景与资源。",
+      "path": "Samples~/Core-ObjectPool-Examples"
+    },
+    {
+      "displayName": "Core — SOEventBus",
+      "description": "ScriptableObject 事件总线演示。",
+      "path": "Samples~/Core-SOEventBus-Examples"
+    },
+    {
+      "displayName": "Core — SharedVariables",
+      "description": "共享变量与可选持久化演示（部分 UI 依赖 TextMeshPro）。",
+      "path": "Samples~/Core-SharedVariables-Examples"
+    },
+    {
+      "displayName": "Core — StateMachine",
+      "description": "轻量 FSM 演示场景。",
+      "path": "Samples~/Core-StateMachine-Examples"
+    },
+    {
+      "displayName": "Core — TimerSystem",
+      "description": "全局计时器演示。",
+      "path": "Samples~/Core-TimerSystem-Examples"
+    },
+    {
+      "displayName": "Modules — AudioSystem",
+      "description": "音频请求通道与 AudioManager 演示。",
+      "path": "Samples~/Modules-AudioSystem-Examples"
+    }
+  ],
+  "author": {
+    "name": "EW Framework"
+  }
+}
