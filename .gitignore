@@ -121,3 +121,5 @@ Desktop.ini
 *.swp
 *.swo
 *~
+# UPM samples live in Samples~ (hidden from the importer by the trailing ~); keep them in VCS
+!Samples~/
