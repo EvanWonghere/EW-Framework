@@ -16,13 +16,13 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 
 ## 技术栈与环境
 
-- Unity `6000.3.11f1`（包声明最低 `6000.0`）
+- Unity `6000.4.7f1`（包声明最低 `6000.0`）
 - Render Pipeline: URP；Input: Input System；Test: Unity Test Framework
 - 包依赖：Addressables、UniTask、Newtonsoft.Json
 
 ## 快速开始
 
-1. 使用 Unity `6000.3.11f1` 打开本仓库（默认场景 `Assets/Scenes/SampleScene.unity`）。框架以嵌入式包形式位于 `Packages/com.ew.ew-framework/`，无需额外声明。
+1. 使用 Unity `6000.4.7f1` 打开本仓库（默认场景 `Assets/Scenes/SampleScene.unity`）。框架以嵌入式包形式位于 `Packages/com.ew.ew-framework/`，无需额外声明。
 2. **导入示例**：**Window > Package Manager** → 选择 **EW Framework**（`com.ew.ew-framework`）→ **Samples** 中按需 **Import**。示例会被复制到 `Assets`，其中部分依赖 Input System / TextMesh Pro。
 3. 在 `Assets` 中打开并 Play 对应场景：`ObjectPoolDemo`、`EventBusDemo`、`SharedVariablesDemo`、`StateMachineExampleDemo`、`TimerSystemDemo`、`AudioSystemDemo`。
 
