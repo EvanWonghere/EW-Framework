@@ -4,7 +4,11 @@
   "references": [
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner",
-    "EW.Framework.Core"
+    "EW.Framework.Core",
+    "EW.Framework.Modules",
+    "UniTask",
+    "Unity.Addressables",
+    "Unity.ResourceManager"
   ],
   "includePlatforms": [
     "Editor"

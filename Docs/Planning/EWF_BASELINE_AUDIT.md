@@ -82,7 +82,7 @@
 
 ## 4.6 TimerSystem（全局 Timer 管理）
 
-- `TimerManager` + `Timer` 句柄：Delay/Loop、Pause/Resume/Cancel、Scaled/Unscaled。
+- `TimerManager` + `TimerHandle` 句柄（带版本校验）：Delay/Loop、Pause/Resume/Cancel、Scaled/Unscaled。
 - 与 `ObjectPool` 的 `ReferencePoolManager` 集成，复用 Timer 以降低 GC。
 - Examples 提供可运行场景，演示 timeScale 影响与 ClearAll 的安全性。
 - 入口与说明：

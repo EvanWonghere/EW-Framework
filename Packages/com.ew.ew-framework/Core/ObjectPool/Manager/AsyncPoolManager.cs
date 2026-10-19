@@ -26,7 +26,8 @@ namespace EW_Framework.Core.ObjectPool.Manager
 
         // GUID -> composite structure containing the pool and memory handle
         private readonly Dictionary<string, AsyncPoolData> _asyncPools = new();
-        private readonly Dictionary<string, UniTask<AsyncPoolData>> _creatingTasks = new();
+        // AsyncLazy rather than UniTask: a UniTask (even after Preserve()) cannot be awaited by several callers while still pending
+        private readonly Dictionary<string, AsyncLazy<AsyncPoolData>> _creatingTasks = new();
 
         [Header("Lifecycle Settings")]
         [Tooltip("Whether to automatically clear the object pool when the scene is unloaded? (if multiple scenes are loaded Additively, please be cautious to turn on)")]
@@ -73,7 +74,7 @@ namespace EW_Framework.Core.ObjectPool.Manager
             {
                 if (!_creatingTasks.TryGetValue(guid, out var creatingTask))
                 {
-                    creatingTask = CreateAsyncPool(assetRef, guid);
+                    creatingTask = CreateAsyncPool(assetRef, guid).ToAsyncLazy();
                     _creatingTasks[guid] = creatingTask;
                 }
 

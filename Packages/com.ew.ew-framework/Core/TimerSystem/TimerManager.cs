@@ -68,8 +68,8 @@ namespace EW_Framework.Core.TimerSystem
         /// <param name="isLooping">Whether to loop execution</param>
         /// <param name="useUnscaledTime">Whether to ignore Time.timeScale (often used when UI is paused)</param>
         /// <param name="onUpdate">Callback per frame, return progress 0~1</param>
-        /// <returns>Return the handle of the timer, which can be used to cancel or pause</returns>
-        public Timer Register(float duration, Action onComplete, bool isLooping = false, bool useUnscaledTime = false, Action<float> onUpdate = null)
+        /// <returns>Handle of the timer, used to cancel or pause it; it becomes invalid once the timer is recycled</returns>
+        public TimerHandle Register(float duration, Action onComplete, bool isLooping = false, bool useUnscaledTime = false, Action<float> onUpdate = null)
         {
             duration = Mathf.Max(0f, duration);
 
@@ -78,7 +78,7 @@ namespace EW_Framework.Core.TimerSystem
             newTimer.Initialize(duration, onComplete, isLooping, useUnscaledTime, onUpdate);
             _timersToAdd.Add(newTimer);
 
-            return newTimer;
+            return new TimerHandle(newTimer);
         }
 
         // ================= Internal methods =================

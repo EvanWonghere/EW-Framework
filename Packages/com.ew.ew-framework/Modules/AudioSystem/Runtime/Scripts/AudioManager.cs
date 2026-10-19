@@ -29,7 +29,7 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
         [SerializeField] private AudioSource _bgmSourceB;
         private bool _isUsingSourceA = true;
 
-        private Timer _crossfadeTimer;
+        private TimerHandle _crossfadeTimer;
 
         // Core tracker: active SFX players (Key -> list)
         private readonly Dictionary<string, List<AudioPlayer>> _activeSFXTracker = new();
@@ -385,7 +385,7 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
                 return;
             }
 
-            if (_crossfadeTimer != null && !_crossfadeTimer.IsDone) _crossfadeTimer.Cancel();
+            if (_crossfadeTimer.IsActive) _crossfadeTimer.Cancel();
 
             _crossfadeTimer = TimerManager.Instance.Register(
                 duration: bgmCrossfadeDuration,

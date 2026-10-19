@@ -17,6 +17,10 @@ namespace EW_Framework.Core.TimerSystem
         public bool IsPaused { get; private set; }
         public bool IsCancelled { get; private set; }
         public bool IsDone { get; private set; }
+        /// <summary>
+        /// Incremented each time the timer returns to the pool, so a <see cref="TimerHandle"/> taken before can tell it is stale.
+        /// </summary>
+        public int Version { get; private set; }
 
         // Callback events
         private Action _onComplete;
@@ -49,14 +53,20 @@ namespace EW_Framework.Core.TimerSystem
 
             TimeElapsed += deltaTime;
 
+            // A callback may recycle this timer (e.g. ClearAllTimers) and a Register in it may already own it again;
+            // after that, this Tick must not touch the instance.
+            int version = Version;
+
             // Trigger progress callback (e.g. fill progress bar in UI)
             float progress = Duration <= 0f ? 1f : Mathf.Clamp01(TimeElapsed / Duration);
             _onUpdate?.Invoke(progress);
+            if (Version != version) return;
 
             // Time's up!
             if (TimeElapsed >= Duration)
             {
                 _onComplete?.Invoke();
+                if (Version != version) return;
 
                 if (IsLooping)
                 {
@@ -88,6 +98,7 @@ namespace EW_Framework.Core.TimerSystem
 
         public void OnReturnPool()
         {
+            Version++;
             IsCancelled = false;
             IsPaused = false;
             IsDone = false;

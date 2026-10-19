@@ -40,7 +40,7 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 
 ## 运行测试
 
-测试位于 `Packages/com.ew.ew-framework/Tests/Editor/`（程序集 `EW.Framework.Tests.Editor`），覆盖 StateMachine、ReferencePoolManager、Timer、SharedVariableSO 与事件内核 SafeEvent，均为不依赖 PlayMode 的纯逻辑用例。
+测试位于 `Packages/com.ew.ew-framework/Tests/Editor/`（程序集 `EW.Framework.Tests.Editor`），覆盖 StateMachine、ReferencePoolManager、Timer 与 TimerHandle 失效校验、SharedVariableSO、事件内核 SafeEvent、AsyncPoolManager 并发首次加载、ClearAllTimers 回调重入，以及"每个 ScriptableObject / MonoBehaviour 类都有自己的 MonoScript、示例资产的脚本引用有效"的资产检查。均在 EditMode 下运行，需要逐帧驱动的管理器通过反射手动调用 `Update`。
 
 - **编辑器内**：**Window > General > Test Runner** → **EditMode** → **Run All**。
 - **命令行**（需先关闭打开本工程的编辑器）：
@@ -60,6 +60,7 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 - **可调试**：自定义 Inspector 可在编辑器里直接 Raise 事件、显示当前监听者数量，排查"事件发了没人收"一类问题。
 - **事件内核 `SafeEvent`**：监听者存于 `HashSet`，重复注册不会重复回调；`Raise` 时先拷贝快照再遍历，回调中注销自己或他人不会抛出"集合已修改"异常。代价是回调顺序不保证，且每次 `Raise` 分配一个快照数组。
 - **编辑器下的残留监听**：SO 资产在退出 Play 后仍然存在，因此通道在编辑器下的 `OnDisable` 中清空监听列表，避免旧监听指向已销毁的对象。
+- **一类一文件**：Unity 只为一个 .cs 文件生成一个 MonoScript，多个类同处一个文件时只有一个能被资产或组件引用（实测 6000.4 绑定的是文件中的第一个类）。因此每个具体的通道 SO、共享变量 SO 和 Listener / Raiser 组件都单独成文件，并由测试检查。
 - **资产数量问题**：一个事件一个资产会让资产膨胀，所以 `SafeEvent` / `SafeVoidEvent` 可单独使用，让一个业务 SO 内嵌多个事件（聚合模式，见 SOEventBus 示例）。
 
 ### 三种对象池各自适用的场景
@@ -67,7 +68,7 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 | 池 | 适用 | 关键实现 |
 |---|---|---|
 | `SyncPoolManager` | 已直接引用 Prefab、需要同步拿到实例：子弹、特效、飘字、SFX 播放器 | 以 Prefab 为 key 维护池；实例上挂 `PoolItem` 记住所属池，所以 `Despawn` 只需传实例；不是从池里取出的对象会直接 `Destroy` |
-| `AsyncPoolManager` | 通过 Addressables `AssetReference` 按需加载的资源 | 以资源 GUID 为 key，首次 `SpawnAsync` 时异步加载 Prefab 再建池；`ClearAllPools` 时释放 Addressables 句柄，资源才会真正卸载。已知问题：对同一 GUID 的并发首次请求本意是共享同一个创建任务，但该 `UniTask` 未 `Preserve()`，第二个等待方会抛异常（见 Roadmap） |
+| `AsyncPoolManager` | 通过 Addressables `AssetReference` 按需加载的资源 | 以资源 GUID 为 key，首次 `SpawnAsync` 时异步加载 Prefab 再建池；`ClearAllPools` 时释放 Addressables 句柄，资源才会真正卸载。对同一 GUID 的并发首次请求共享同一次加载：创建任务以 `AsyncLazy` 保存，因为 `UniTask` 在未完成时只能被 await 一次（`Preserve()` 只解决完成后的重复 await，挂起期间的第二个等待方仍会抛异常） |
 | `ReferencePoolManager` | 纯 C# 对象：Timer、命令、临时数据 | 静态泛型类 `Cache<T>` 为每个类型持有一个池，类型本身就是 key，无字典查找；归还时调用 `IReference<T>.OnReturnPool()` 重置字段 |
 
 两个 GameObject 池都基于 Unity 官方 `UnityEngine.Pool.ObjectPool<T>`，超过 `maxSize` 的归还实例直接销毁。三者都关闭了 `collectionCheck` 以省去归还时的查重开销，代价是重复归还不会报错，调用方需保证"只归还自己取出的对象，且只归还一次"。
@@ -76,7 +77,7 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 
 - **动机**：计时器在 Gameplay 中是高频、短命的对象（技能冷却、Buff、渐变、延迟回收），每次 `new` 都会产生 GC。`Timer` 实现 `IReference<Timer>`，`TimerManager.Register` 通过 `ReferencePoolManager.Acquire` 取实例，到期或取消后由 `TimerManager` 统一 `Release` 回池。
 - **更新顺序**：新注册的 Timer 先进入待添加列表，在下一次 `TimerManager.Update` 开始时才并入活动列表；每帧先逆序 Tick 全部 Timer，再单独一趟清扫回收已完成 / 已取消的 Timer。回调里注册新计时器不会修改正在遍历的列表。
-- **代价（已知限制）**：`Register` 返回的句柄就是被池化的 `Timer` 实例本身。Timer 完成或取消后会被回收并可能分配给下一次 `Register`，此时仍持有旧句柄的调用方若再调用 `Cancel()`，会取消掉别人的计时器。目前需要调用方在完成后丢弃句柄；计划为句柄加代数（generation）校验，见 Roadmap。
+- **句柄代数校验**：池化意味着 Timer 完成或取消后，同一个实例会分配给下一次 `Register`。如果把实例本身交给调用方，仍持有旧引用的一方再调用 `Cancel()` 就会取消掉别人的计时器。因此 `Register` 返回 `readonly struct TimerHandle`，记录实例和注册时的 `Version`；Timer 回池时 `Version + 1`，旧句柄随之失效，`Cancel` / `Pause` / `Resume` 变为空操作。调用方可以放心长期持有句柄，用 `IsActive` 判断计时器是否仍在运行。代价是这是一次破坏性 API 变更（`Register` 原先返回 `Timer`），且失效句柄读不到计时器的最终状态。
 
 ## 目录结构
 
@@ -100,8 +101,6 @@ Docs/Planning/  架构蓝图、模块规格、Demo 设计等规划文档
 
 以下内容**尚未实现**，规格文档见 `Docs/Planning/`：
 
-- **Timer 句柄安全**：为句柄增加代数校验，避免回收复用后的误取消（见「设计取舍」）。
-- **异步池并发创建**：为 `AsyncPoolManager` 的创建任务加 `Preserve()`，让同一 GUID 的并发首次 `SpawnAsync` 真正共享一次加载。
 - **PlayMode 测试**：覆盖 `SyncPoolManager`、`TimerManager` 等需要逐帧驱动的管理器。
 - **Gameplay Ability 展示**：按 `EWF_MODULE_SPECS.md` 实现以下模块，并按 `EWF_DEMO_DESIGN.md` 落地 Demo 场景。
   - **Ability**：能力激活、生命周期、冷却、取消与打断。

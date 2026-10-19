@@ -15,8 +15,8 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
     public class AudioPlayer : MonoBehaviour, IPoolable
     {
         private AudioSource _audioSource;
-        private Timer _despawnTimer;
-        private Timer _fadeTimer;
+        private TimerHandle _despawnTimer;
+        private TimerHandle _fadeTimer;
         private Transform _followTarget;
         private bool _is3D;
 
@@ -67,15 +67,15 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
             _is3D = false;
 
             // If the timer is still running when returning to the object pool (e.g. forced scene switch), cancel it
-            if (_despawnTimer != null && !_despawnTimer.IsDone)
+            if (_despawnTimer.IsActive)
             {
                 _despawnTimer.Cancel();
-                _despawnTimer = null;
+                _despawnTimer = default;
             }
-            if (_fadeTimer != null && !_fadeTimer.IsDone)
+            if (_fadeTimer.IsActive)
             {
                 _fadeTimer.Cancel();
-                _fadeTimer = null;
+                _fadeTimer = default;
             }
 
             if (!string.IsNullOrEmpty(oldKey) && AudioManager.Instance != null)
@@ -107,13 +107,13 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
                     break;
                 case AudioCommandType.Pause:
                     _audioSource.Pause();
-                    _despawnTimer?.Pause();
-                    _fadeTimer?.Pause();
+                    _despawnTimer.Pause();
+                    _fadeTimer.Pause();
                     break;
                 case AudioCommandType.Resume:
                     _audioSource.UnPause();
-                    _despawnTimer?.Resume();
-                    _fadeTimer?.Resume();
+                    _despawnTimer.Resume();
+                    _fadeTimer.Resume();
                     break;
                 case AudioCommandType.SetVolume:
                     _audioSource.volume = Mathf.Clamp01(cmd.Volume);
@@ -142,7 +142,7 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
                 return;
             }
 
-            if (_fadeTimer != null && !_fadeTimer.IsDone) _fadeTimer.Cancel();
+            if (_fadeTimer.IsActive) _fadeTimer.Cancel();
             float start = _audioSource.volume;
             _fadeTimer = TimerManager.Instance.Register(
                 duration: fadeDuration,
@@ -155,15 +155,15 @@ namespace EW_Framework.Modules.AudioSystem.Runtime
 
         private void Play(AudioCommand cmd)
         {
-            if (_despawnTimer != null && !_despawnTimer.IsDone)
+            if (_despawnTimer.IsActive)
             {
                 _despawnTimer.Cancel();
-                _despawnTimer = null;
+                _despawnTimer = default;
             }
-            if (_fadeTimer != null && !_fadeTimer.IsDone)
+            if (_fadeTimer.IsActive)
             {
                 _fadeTimer.Cancel();
-                _fadeTimer = null;
+                _fadeTimer = default;
             }
 
             CurrentKey = cmd.AudioKey ?? string.Empty;
