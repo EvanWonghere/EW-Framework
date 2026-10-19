@@ -1,205 +1,121 @@
 # EW Framework
 
-一个基于 Unity/C# 的 Gameplay Framework 模板项目，目标是同时满足：
+Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Packages/com.ew.ew-framework/) 组织，可通过 Git URL 引入其它工程。每个模块附文档与可导入的示例（UPM Samples），核心逻辑有 EditMode 单元测试。
 
-- **可复用模板**：沉淀通用模块与规范，便于后续项目复用。
-- **能力展示仓库**：通过 Demo 场景展示 Gameplay Ability 系统设计思路。
+| 模块 | 层 | 做什么 | 文档 | 示例 |
+|---|---|---|---|---|
+| **SOEventBus** | Core | ScriptableObject 事件通道：发布方与订阅方只依赖通道资产；Inspector 扩展可手动触发事件、查看当前监听者数量 | [README](Packages/com.ew.ew-framework/Core/SOEventBus/README.md) | ✓ |
+| **ObjectPool** | Core | 同步 GameObject 池、Addressables 异步池、纯 C# 引用池 | [README](Packages/com.ew.ew-framework/Core/ObjectPool/README.md) | ✓ |
+| **StateMachine** | Core | 泛型 FSM：按类型缓存状态实例，支持 ChangeState 与 Push/Pop 状态栈 | [README](Packages/com.ew.ew-framework/Core/StateMachine/README.md) | ✓ |
+| **TimerSystem** | Core | 全局计时器：Delay / Loop、Pause / Resume / Cancel、Scaled / Unscaled 时间，Timer 由引用池复用 | [README](Packages/com.ew.ew-framework/Core/TimerSystem/README.md) | ✓ |
+| **SharedVariables** | Core | ScriptableObject 共享变量：值变更事件 + 可选的 JSON 存取（`ISaveable`） | [README](Packages/com.ew.ew-framework/Core/SharedVariables/README.md) | ✓ |
+| **Singleton** | Core | 纯 C# `Singleton<T>`、场景级 `MonoSingleton<T>`、跨场景 `PersistentMonoSingleton<T>` | [README](Packages/com.ew.ew-framework/Core/Singleton/README.md) | — |
+| **AudioSystem** | Modules | 命令式音频：通过事件通道发送 `AudioCommand`，由 `AudioManager` 调度 BGM 交叉淡入淡出与对象池化的 SFX | [README](Packages/com.ew.ew-framework/Modules/AudioSystem/README.md) | ✓ |
 
-## 项目状态
-
-当前仓库已进入 **实现推进阶段**：
-
-- 已实现（Core）：`ObjectPool`、`SharedVariables`、`Singleton`、`SOEventBus`、`StateMachine`、`TimerSystem`（均含模块文档；可运行示例以 UPM **Samples** 形式提供，见「快速开始」）
-- 规划/待推进（Modules/Demo）：Ability / Attribute / Effect / Tag / Combat 的规格落地与 Demo 场景实现
+**当前状态**：上表模块已实现；Ability / Attribute / Effect / Tag / Combat 等 Gameplay 模块仍在规划，见文末 [Roadmap](#roadmap)。
 
 ## 技术栈与环境
 
-- Unity: `6000.3.11f1`
-- Render Pipeline: URP (`com.unity.render-pipelines.universal`)
-- Input: Input System (`com.unity.inputsystem`)
-- Test: Unity Test Framework (`com.unity.test-framework`)
-
-## 输入系统约定（Input System）
-
-- 本仓库 **统一使用新版 Input System**（`com.unity.inputsystem`），包括导入 Samples 后的示例脚本。
-- 示例脚本应优先使用 `UnityEngine.InputSystem.InputAction`（在 `OnEnable/OnDisable` 中 Enable/Disable，在 `OnDestroy` 中 Dispose），避免使用旧版 `Input.GetKey*` API。
-
-## Core 模块索引（已实现）
-
-- **ObjectPool**：基于 Unity `IObjectPool<T>` 的对象池（同步 GameObject 池 / Addressables 异步池 / 纯 C# 引用池）。
-  - 同步 Spawn/Despawn 替代 Instantiate/Destroy；支持 `IPoolable` 生命周期。
-  - `ReferencePoolManager` 为纯 C# 类型提供 Acquire/Release 与 `IReference<T>.OnReturnPool()` 归还回调。
-  - 文档：`Packages/com.ew.ew-framework/Core/ObjectPool/README.md`；示例说明：`Packages/com.ew.ew-framework/Samples~/Core-ObjectPool-Examples/README.md`（导入 Sample 后可在 `Assets` 中查看副本）
-- **SharedVariables**：基于 ScriptableObject 的共享变量（变更事件 + 可选持久化 `ISaveable`）。
-  - 类型驱动的 SO 资产（Int/Float/...）用于跨对象共享读写。
-  - 示例提供监听、修改、以及基于 PlayerPrefs 的可选存取。
-  - 文档：`Packages/com.ew.ew-framework/Core/SharedVariables/README.md`；示例说明：`Packages/com.ew.ew-framework/Samples~/Core-SharedVariables-Examples/README.md`
-- **Singleton**：单例基类集合（纯 C# `Singleton<T>`、场景级 `MonoSingleton<T>`、跨场景 `PersistentMonoSingleton<T>`）。
-  - 统一懒加载与防御逻辑，便于 Core/Modules 的管理器实现。
-  - 文档：`Packages/com.ew.ew-framework/Core/Singleton/README.md`
-- **SOEventBus**：ScriptableObject Event Channel（原子通道 & 聚合通道 `SafeEvent`）。
-  - 发布方/订阅方通过 Channel 资产解耦；支持 void 与多种载荷类型通道。
-  - Editor 支持触发测试与监听列表可视化；聚合 SO 通过 `SafeEvent` 组合多事件。
-  - 文档：`Packages/com.ew.ew-framework/Core/SOEventBus/README.md`；示例说明：`Packages/com.ew.ew-framework/Samples~/Core-SOEventBus-Examples/README.md`
-- **StateMachine**：轻量泛型 FSM（按状态类型缓存实例，支持 ChangeState 与 Push/Pop）。
-  - Context 驱动状态逻辑；`IStackState<T>` 提供 Pause/Resume 语义。
-  - 文档：`Packages/com.ew.ew-framework/Core/StateMachine/README.md`；示例说明：`Packages/com.ew.ew-framework/Samples~/Core-StateMachine-Examples/README.md`
-- **TimerSystem**：全局计时器管理器 + 可池化 Timer 句柄（Delay/Loop、Pause/Resume/Cancel、Scaled/Unscaled）。
-  - 与 `ObjectPool` 的 `ReferencePoolManager` 集成，复用 Timer 降低 GC。
-  - 文档：`Packages/com.ew.ew-framework/Core/TimerSystem/README.md`；示例说明：`Packages/com.ew.ew-framework/Samples~/Core-TimerSystem-Examples/README.md`
-
-## UPM 包（供其它工程引用）
-
-框架代码位于嵌入式包 [`Packages/com.ew.ew-framework/`](Packages/com.ew.ew-framework/)，包名为 `com.ew.ew-framework`。
-
-- **对外安装（推荐）**：在其它项目的 `Packages/manifest.json` 中用 **Git URL** 引用本仓库的 **`release`** 分支（包路径 `Packages/com.ew.ew-framework`）。示例与注意事项见包内 [`README.md`](Packages/com.ew.ew-framework/README.md)。
-- **`release` 分支**：用于发布可供其它工程引用的 UPM 布局；日常开发可在 `main` 上进行，发版或稳定快照时合并/推送到 `release`。
-
-## 目录规划（目标态）
-
-`Packages/com.ew.ew-framework/` 采用以下分层：
-
-- `Core/`: 基础设施层（事件总线、基础契约）
-- `Modules/`: 领域模块层（Ability、Attribute、Effect、Tag、Combat）
-- `Utils/`: 通用工具层（辅助与扩展）
-- `Demo/`: 展示层（独立 Demo 场景与演示资源）
-
-依赖方向：
-
-```text
-Demo -> Modules -> Core
-```
-
-说明：
-
-- `Core` 与各模块的**可运行示例**以 UPM **Samples**（`Samples~`）分发；导入后复制到项目的 `Assets`。正式 Gameplay Demo 场景建议集中放到 `Packages/com.ew.ew-framework/Demo/`（或未来单独 Demo 包），以满足依赖方向与叙事组织。
-
-## 核心模块（规划）
-
-- **Ability**
-  - 管理能力激活、生命周期、冷却、取消与打断。
-- **Attribute**
-  - 管理属性值与统一变更入口。
-- **Effect**
-  - 表达和执行即时/持续/周期效果，支持叠层策略。
-- **Tag**
-  - 提供状态门控（Required/Blocked）与标签查询。
-- **Combat**
-  - 组织目标筛选、命中判定与结算流程。
-
-## Demo 场景索引（规划）
-
-- `Demo_Ability_Basics`
-  - 展示能力激活闭环（触发 -> 激活 -> 冷却）。
-- `Demo_Effect_Stacking`
-  - 展示效果叠层策略（Refresh/Independent/Replace）。
-- `Demo_Combat_Interaction`
-  - 展示战斗交互、Tag 门控和属性变化联动。
+- Unity `6000.3.11f1`（包声明最低 `6000.0`）
+- Render Pipeline: URP；Input: Input System；Test: Unity Test Framework
+- 包依赖：Addressables、UniTask、Newtonsoft.Json
 
 ## 快速开始
 
-1. 使用 Unity `6000.3.11f1` 打开项目。
-2. 打开 `Assets/Scenes/SampleScene.unity`（当前默认场景）。
-3. **导入示例资源**：菜单 **Window > Package Manager**，选择 **Packages: In Project** 或左侧 **EW Framework**（`com.ew.ew-framework`），在 **Samples** 中按需点击 **Import**（将 `Samples~` 中的场景与脚本复制到 `Assets`；部分示例依赖 Input System / TextMesh Pro，请确保 `manifest.json` 中已包含与项目版本匹配的包）。
-4. 导入后，在 `Assets` 中打开并 Play 对应场景（名称与包内 Sample 一致），例如：
-   - `ObjectPoolDemo.unity`
-   - `EventBusDemo.unity`
-   - `SharedVariablesDemo.unity`
-   - `StateMachineExampleDemo.unity`
-   - `TimerSystemDemo.unity`
-   - （可选）`AudioSystem` 模块：`AudioSystemDemo.unity`
-5. 阅读以下文档理解架构与 Modules/Demo 规划：
-   - `Docs/Planning/EWF_BASELINE_AUDIT.md`
-   - `Docs/Planning/EWF_ARCHITECTURE_BLUEPRINT.md`
-   - `Docs/Planning/EWF_MODULE_SPECS.md`
-   - `Docs/Planning/EWF_DEMO_DESIGN.md`
+1. 使用 Unity `6000.3.11f1` 打开本仓库（默认场景 `Assets/Scenes/SampleScene.unity`）。框架以嵌入式包形式位于 `Packages/com.ew.ew-framework/`，无需额外声明。
+2. **导入示例**：**Window > Package Manager** → 选择 **EW Framework**（`com.ew.ew-framework`）→ **Samples** 中按需 **Import**。示例会被复制到 `Assets`，其中部分依赖 Input System / TextMesh Pro。
+3. 在 `Assets` 中打开并 Play 对应场景：`ObjectPoolDemo`、`EventBusDemo`、`SharedVariablesDemo`、`StateMachineExampleDemo`、`TimerSystemDemo`、`AudioSystemDemo`。
 
-## 扩展原则
+## 在其它 Unity 工程中引用
 
-- 优先通过接口与事件通信，避免跨模块直接访问内部状态。
-- 新增能力前先补规格文档，确保语义一致再进入实现。
-- Demo 只负责展示与验证，不承载核心业务规则。
+在目标工程 `Packages/manifest.json` 的 `dependencies` 中加入（`#release` 可换成 tag 或 commit 以锁定版本）：
 
-## 文档索引
+```json
+"com.ew.ew-framework": "https://github.com/EvanWonghere/EW-Framework.git?path=Packages/com.ew.ew-framework#release"
+```
 
-- 基线盘点：`Docs/Planning/EWF_BASELINE_AUDIT.md`
-- 架构蓝图：`Docs/Planning/EWF_ARCHITECTURE_BLUEPRINT.md`
-- 模块规格：`Docs/Planning/EWF_MODULE_SPECS.md`
-- Demo 方案：`Docs/Planning/EWF_DEMO_DESIGN.md`
-- 决策记录：`Docs/Planning/EWF_DOCUMENTATION_DECISIONS.md`
+- **消费项目请显式声明依赖**：Unity 对「仅通过 Git 安装的包」有时**不会**把本包 `package.json` 里的 **Git 子依赖**（如 UniTask）自动合并进消费工程，会导致 `Cysharp` / `UniTask` 找不到、进而 `EW.Framework.Editor` 未编译、Burst 报无法解析程序集。请在消费项目的 `Packages/manifest.json` 中**同时**加入与本包 `package.json` 一致的 `com.cysharp.unitask`（及 Addressables、Newtonsoft 若尚未存在），详见包内 README「消费项目建议显式声明的依赖」。
+- **`release` 分支**：用于发布可供其它工程引用的 UPM 布局；日常开发在 `main` 上进行，发版或稳定快照时合并/推送到 `release`。
+- 本地联调可用 `file:` 路径引用，详见包内 [`README.md`](Packages/com.ew.ew-framework/README.md)。
 
-## 路线概览
+## 运行测试
 
-- M1: 架构蓝图与模块规格定稿
-- M2: Demo 方案定稿
-- M3: README 完整化并进入实现阶段
+测试位于 `Packages/com.ew.ew-framework/Tests/Editor/`（程序集 `EW.Framework.Tests.Editor`），覆盖 StateMachine、ReferencePoolManager、Timer、SharedVariableSO 与事件内核 SafeEvent，均为不依赖 PlayMode 的纯逻辑用例。
 
-## 详细路线图（Roadmap）
+- **编辑器内**：**Window > General > Test Runner** → **EditMode** → **Run All**。
+- **命令行**（需先关闭打开本工程的编辑器）：
 
-### Phase A：文档闭环（当前阶段）
+  ```bash
+  <Unity 可执行文件> -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults ./TestResults/editmode.xml
+  ```
 
-- 完成并对齐以下文档：
-  - `Docs/Planning/EWF_BASELINE_AUDIT.md`
-  - `Docs/Planning/EWF_ARCHITECTURE_BLUEPRINT.md`
-  - `Docs/Planning/EWF_MODULE_SPECS.md`
-  - `Docs/Planning/EWF_DEMO_DESIGN.md`
-- 明确首轮实现范围（P0/P1/P2）与验收标准。
+  macOS 上 Unity 可执行文件一般位于 `/Applications/Unity/Hub/Editor/<版本>/Unity.app/Contents/MacOS/Unity`。退出码为 0 表示全部通过，结果写入 `TestResults/editmode.xml`（NUnit XML）。
+- **在消费工程中运行本包测试**：通过 Git URL 引用的包默认不参与测试，需在消费工程 `manifest.json` 顶层加入 `"testables": ["com.ew.ew-framework"]`。
 
-### Phase B：首轮实现（下一阶段）
+## 设计取舍
 
-- 先落地 Ability + Attribute + Effect 最小闭环。
-- 再接入 Tag/Combat，实现可解释的门控与结算流程。
-- 最后按 Demo 设计文档落地三个展示场景。
+### 为什么用 ScriptableObject 事件通道
 
-### Phase C：展示增强（后续阶段）
+- **解耦方式**：发布方与订阅方只共同引用一个通道资产（`GameEventSO` / `GameEventSO<T>`），可在 Inspector 中拖拽连线；跨 Prefab、跨场景通信不需要互相持有引用，也不需要全局单例查找。
+- **可调试**：自定义 Inspector 可在编辑器里直接 Raise 事件、显示当前监听者数量，排查"事件发了没人收"一类问题。
+- **事件内核 `SafeEvent`**：监听者存于 `HashSet`，重复注册不会重复回调；`Raise` 时先拷贝快照再遍历，回调中注销自己或他人不会抛出"集合已修改"异常。代价是回调顺序不保证，且每次 `Raise` 分配一个快照数组。
+- **编辑器下的残留监听**：SO 资产在退出 Play 后仍然存在，因此通道在编辑器下的 `OnDisable` 中清空监听列表，避免旧监听指向已销毁的对象。
+- **资产数量问题**：一个事件一个资产会让资产膨胀，所以 `SafeEvent` / `SafeVoidEvent` 可单独使用，让一个业务 SO 内嵌多个事件（聚合模式，见 SOEventBus 示例）。
 
-- 增强调试可视化（状态面板、事件流、失败原因）。
-- 补充测试覆盖（激活规则、叠层规则、门控规则）。
-- 持续沉淀为可迁移模板（目录规范、命名规范、文档模板）。
+### 三种对象池各自适用的场景
 
-## 不在当前范围（Out of Scope）
+| 池 | 适用 | 关键实现 |
+|---|---|---|
+| `SyncPoolManager` | 已直接引用 Prefab、需要同步拿到实例：子弹、特效、飘字、SFX 播放器 | 以 Prefab 为 key 维护池；实例上挂 `PoolItem` 记住所属池，所以 `Despawn` 只需传实例；不是从池里取出的对象会直接 `Destroy` |
+| `AsyncPoolManager` | 通过 Addressables `AssetReference` 按需加载的资源 | 以资源 GUID 为 key，首次 `SpawnAsync` 时异步加载 Prefab 再建池；`ClearAllPools` 时释放 Addressables 句柄，资源才会真正卸载。已知问题：对同一 GUID 的并发首次请求本意是共享同一个创建任务，但该 `UniTask` 未 `Preserve()`，第二个等待方会抛异常（见 Roadmap） |
+| `ReferencePoolManager` | 纯 C# 对象：Timer、命令、临时数据 | 静态泛型类 `Cache<T>` 为每个类型持有一个池，类型本身就是 key，无字典查找；归还时调用 `IReference<T>.OnReturnPool()` 重置字段 |
 
-以下内容暂不纳入当前阶段交付：
+两个 GameObject 池都基于 Unity 官方 `UnityEngine.Pool.ObjectPool<T>`，超过 `maxSize` 的归还实例直接销毁。三者都关闭了 `collectionCheck` 以省去归还时的查重开销，代价是重复归还不会报错，调用方需保证"只归还自己取出的对象，且只归还一次"。
 
-- 网络同步（多人联机）
-- **完整**存档系统（Save/Load 管线、多槽位、云同步等）；Core 层提供 `ISaveable` 与 SharedVariables 的预留持久化能力，供后续接入
-- 完整 AI 行为系统
-- 美术表现深度打磨（高级 VFX/SFX/动画管线）
+### Timer 为什么用引用池
 
-## FAQ
+- **动机**：计时器在 Gameplay 中是高频、短命的对象（技能冷却、Buff、渐变、延迟回收），每次 `new` 都会产生 GC。`Timer` 实现 `IReference<Timer>`，`TimerManager.Register` 通过 `ReferencePoolManager.Acquire` 取实例，到期或取消后由 `TimerManager` 统一 `Release` 回池。
+- **更新顺序**：新注册的 Timer 先进入待添加列表，在下一次 `TimerManager.Update` 开始时才并入活动列表；每帧先逆序 Tick 全部 Timer，再单独一趟清扫回收已完成 / 已取消的 Timer。回调里注册新计时器不会修改正在遍历的列表。
+- **代价（已知限制）**：`Register` 返回的句柄就是被池化的 `Timer` 实例本身。Timer 完成或取消后会被回收并可能分配给下一次 `Register`，此时仍持有旧句柄的调用方若再调用 `Cancel()`，会取消掉别人的计时器。目前需要调用方在完成后丢弃句柄；计划为句柄加代数（generation）校验，见 Roadmap。
 
-### Q1: 这是可直接用于生产的框架吗？
+## 目录结构
 
-A: 当前不是。仓库处于“Core 基建已落地、Gameplay Modules/Demo 持续推进”的阶段；更偏向模板沉淀与能力展示，待 Modules 与测试完善后再评估生产可用性。
+```text
+Packages/com.ew.ew-framework/
+  Core/       基础设施：ObjectPool、SharedVariables、Singleton、SOEventBus、StateMachine、TimerSystem
+  Modules/    领域模块：AudioSystem（Gameplay 模块规划中）
+  Samples~/   各模块的可导入示例（场景 + 脚本）
+  Tests/      EditMode 单元测试
+Docs/Planning/  架构蓝图、模块规格、Demo 设计等规划文档
+```
 
-### Q2: 为什么先做文档而不是直接写代码？
+依赖方向为 `Demo -> Modules -> Core`，Core 不依赖 Modules。
 
-A: 该项目兼具“模板化 + 展示化”双目标。先固定模块边界与语义，可以显著降低返工并提升后续 Demo 叙事质量。
+## 输入系统约定（Input System）
 
-### Q3: Demo 场景什么时候可运行？
+- 本仓库**统一使用新版 Input System**（`com.unity.inputsystem`），包括导入 Samples 后的示例脚本。
+- 示例脚本应优先使用 `UnityEngine.InputSystem.InputAction`（在 `OnEnable/OnDisable` 中 Enable/Disable，在 `OnDestroy` 中 Dispose），避免使用旧版 `Input.GetKey*` API。
 
-A: Core 模块的示例场景在导入 UPM Samples 后可运行（见「快速开始」第 3–4 步）。Gameplay Demo 场景将按 `Docs/Planning/EWF_DEMO_DESIGN.md` 推进落地后逐步可运行。
+## Roadmap
 
-### Q4: 现有可复用资产是什么？
+以下内容**尚未实现**，规格文档见 `Docs/Planning/`：
 
-A: 当前可复用的 Core 基建包括：`ObjectPool`、`SharedVariables`、`Singleton`、`SOEventBus`、`StateMachine`、`TimerSystem`（见上方「Core 模块索引（已实现）」与各模块 README/Examples）。
+- **Timer 句柄安全**：为句柄增加代数校验，避免回收复用后的误取消（见「设计取舍」）。
+- **异步池并发创建**：为 `AsyncPoolManager` 的创建任务加 `Preserve()`，让同一 GUID 的并发首次 `SpawnAsync` 真正共享一次加载。
+- **PlayMode 测试**：覆盖 `SyncPoolManager`、`TimerManager` 等需要逐帧驱动的管理器。
+- **Gameplay Ability 展示**：按 `EWF_MODULE_SPECS.md` 实现以下模块，并按 `EWF_DEMO_DESIGN.md` 落地 Demo 场景。
+  - **Ability**：能力激活、生命周期、冷却、取消与打断。
+  - **Attribute**：属性值与统一变更入口。
+  - **Effect**：即时 / 持续 / 周期效果，支持叠层策略。
+  - **Tag**：状态门控（Required / Blocked）与标签查询。
+  - **Combat**：目标筛选、命中判定与结算流程。
+  - Demo 场景：`Demo_Ability_Basics`（触发 → 激活 → 冷却）、`Demo_Effect_Stacking`（Refresh / Independent / Replace 叠层）、`Demo_Combat_Interaction`（战斗交互、Tag 门控与属性联动）。
+- **调试可视化**：状态面板、事件流、失败原因。
 
-### Q5: 如果我要新增模块，第一步做什么？
+不在当前范围：网络同步、完整存档管线（Core 仅提供 `ISaveable` 与 SharedVariables 的持久化接口）、完整 AI 行为系统、美术表现深度打磨。
 
-A: 先补模块规格（职责、数据模型、生命周期、验收标准），再进入实现。避免语义未定先编码。
-
-### Q6: 如何在别的 Unity 项目里使用本框架？
-
-A: 在目标工程的 `Packages/manifest.json` 的 `dependencies` 中加入对 **`com.ew.ew-framework`** 的引用：
-
-- **Git（推荐）**：使用本仓库 **`release`** 分支与包子路径，例如  
-  `"com.ew.ew-framework": "https://github.com/EvanWonghere/EW-Framework.git?path=Packages/com.ew.ew-framework#release"`  
-  （可将 `#release` 换成 tag 或 commit 以锁定版本。）
-- **本地 `file:`**：指向你本机克隆仓库中的 `Packages/com.ew.ew-framework` 目录。
-
-详细步骤、依赖说明与 Samples 导入方式见 [`Packages/com.ew.ew-framework/README.md`](Packages/com.ew.ew-framework/README.md)。
-
-## 术语表（Glossary）
+<details>
+<summary>规划术语表</summary>
 
 - `AbilityDefinition`：能力静态配置，描述能力规则与参数。
 - `AbilitySpec`：能力与角色绑定后的运行态信息。
@@ -210,4 +126,17 @@ A: 在目标工程的 `Packages/manifest.json` 的 `dependencies` 中加入对 *
 - `Event Channel`：基于 ScriptableObject 的事件通信通道。
 - `Cooldown`：能力激活后再次可用前的等待窗口。
 - `Interrupt`：能力执行过程被外部条件中止。
-- `Demo Script`：一套可重复演示步骤与观察点。
+
+</details>
+
+## 文档索引
+
+- 基线盘点：`Docs/Planning/EWF_BASELINE_AUDIT.md`
+- 架构蓝图：`Docs/Planning/EWF_ARCHITECTURE_BLUEPRINT.md`
+- 模块规格：`Docs/Planning/EWF_MODULE_SPECS.md`
+- Demo 方案：`Docs/Planning/EWF_DEMO_DESIGN.md`
+- 决策记录：`Docs/Planning/EWF_DOCUMENTATION_DECISIONS.md`
+
+## 许可证
+
+[MIT](LICENSE)
