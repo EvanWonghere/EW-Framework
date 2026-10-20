@@ -47,6 +47,11 @@ namespace EW_Framework.Core.ObjectPool.Examples
         // 记录本 demo 通过该 Spawner 生成的实例
         private readonly List<GameObject> _spawnedInstances = new List<GameObject>();
 
+        public GameObject Prefab => prefab;
+        public int SpawnCountPerBatch => spawnCountPerBatch;
+        /// <summary>本 Spawner 累计调用 Spawn 的次数（供 HUD 与 Instantiate 次数对比）。</summary>
+        public int TotalSpawnCalls { get; private set; }
+
         private void Start()
         {
             if (spawnOrigin == null)
@@ -102,6 +107,7 @@ namespace EW_Framework.Core.ObjectPool.Examples
             {
                 Vector3 spawnPos = originPos + new Vector3(i * xSpacing, 0f, 0f);
                 GameObject instance = SyncPoolManager.Instance.Spawn(prefab, spawnPos, Quaternion.identity);
+                TotalSpawnCalls++;
                 if (instance != null)
                 {
                     _spawnedInstances.Add(instance);

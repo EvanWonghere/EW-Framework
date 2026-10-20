@@ -77,6 +77,10 @@ Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Pac
 
 两个 GameObject 池都基于 Unity 官方 `UnityEngine.Pool.ObjectPool<T>`，超过 `maxSize` 的归还实例直接销毁。三者都关闭了 `collectionCheck` 以省去归还时的查重开销，代价是重复归还不会报错，调用方需保证"只归还自己取出的对象，且只归还一次"。
 
+![ObjectPool 示例：Spawn 90 次，只 Instantiate 30 个](Docs/Images/objectpool-demo.gif)
+
+*ObjectPool 示例（`SyncPoolManager`）：每 0.5 秒生成一批，实例 2.5 秒后自动回收。橙色为首次 Instantiate，青色为从池中复用；共调用 Spawn 90 次，实际只创建了 30 个实例。*
+
 ### Timer 为什么用引用池
 
 - **动机**：计时器在 Gameplay 中是高频、短命的对象（技能冷却、Buff、渐变、延迟回收），每次 `new` 都会产生 GC。`Timer` 实现 `IReference<Timer>`，`TimerManager.Register` 通过 `ReferencePoolManager.Acquire` 取实例，到期或取消后由 `TimerManager` 统一 `Release` 回池。

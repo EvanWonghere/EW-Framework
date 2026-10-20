@@ -11,7 +11,8 @@
 
 | 脚本 | 作用 | 操作 |
 |------|------|------|
-| **PooledObjectExample** | 实现 IPoolable，演示 OnSpawn/OnDespawn | 挂在预制体根节点上，运行后从池取出/回收时会在控制台打印并可选高亮。 |
+| **PooledObjectExample** | 实现 IPoolable，演示 OnSpawn/OnDespawn | 挂在预制体根节点上，运行后从池取出/回收时会在控制台打印；开启高亮时，首次创建的实例显示为橙色，从池中复用的显示为青色。 |
+| **ObjectPoolExampleHud** | Game 视图 HUD | 对比累计 Spawn 次数与实际 Instantiate 的实例数，并显示在用与池中闲置数量。挂在任意物体上，引用 Spawner。 |
 | **SyncPoolSpawnerExample** | 使用 SyncPoolManager 生成/回收实例 | 将上一步预制体赋给 `prefab`，运行后 **Space** 生成、**Backspace** 回收最后一个、**C** 清空所有池；可勾选「仅自动回收」则只生成，由预制体上的 AutoDespawn 按时回收。 |
 
 ## 推荐场景搭建
