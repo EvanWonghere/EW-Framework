@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using EW_Framework.Core.StateMachine.Base;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,6 +24,9 @@ namespace EW_Framework.Core.StateMachine.Examples
         private string _lastTransition;
         private float _lastTransitionTime;
 
+        private const int MaxRecentTransitions = 4;
+        private readonly List<string> _recentTransitions = new();
+
         public Transform Target => _target;
         public float ChaseEnterRange => _chaseEnterRange;
         public float ChaseLoseRange => _chaseLoseRange;
@@ -33,6 +37,8 @@ namespace EW_Framework.Core.StateMachine.Examples
         public string CurrentStateName => _fsm?.CurrentState?.GetType().Name ?? "<None>";
         public string LastTransition => string.IsNullOrWhiteSpace(_lastTransition) ? "<None>" : _lastTransition;
         public float LastTransitionTime => _lastTransitionTime;
+        /// <summary>Most recent transitions, newest first (for the HUD).</summary>
+        public IReadOnlyList<string> RecentTransitions => _recentTransitions;
 
         private void Awake()
         {
@@ -137,6 +143,12 @@ namespace EW_Framework.Core.StateMachine.Examples
         {
             _lastTransitionTime = Time.time;
             _lastTransition = string.IsNullOrWhiteSpace(reason) ? transition : $"{transition} ({reason})";
+
+            _recentTransitions.Insert(0, $"{_lastTransitionTime:0.0}s  {_lastTransition}");
+            if (_recentTransitions.Count > MaxRecentTransitions)
+            {
+                _recentTransitions.RemoveAt(_recentTransitions.Count - 1);
+            }
         }
     }
 }

@@ -2,6 +2,10 @@
 
 Unity 6 / C# 的 Gameplay 基础框架，以 UPM 包 [`com.ew.ew-framework`](Packages/com.ew.ew-framework/) 组织，可通过 Git URL 引入其它工程。每个模块附文档与可导入的示例（UPM Samples），核心逻辑有 EditMode 单元测试。
 
+![StateMachine 示例：Idle → Patrol → Chase → Push Pause → Pop → Patrol](Docs/Images/statemachine-demo.gif)
+
+*StateMachine 示例：追逐者按当前状态变色，地面圆圈为追逐范围；HUD 列出最近的状态切换与原因，其中 Pause 通过 `PushState` / `PopState` 压栈与恢复。*
+
 | 模块 | 层 | 做什么 | 文档 | 示例 |
 |---|---|---|---|---|
 | **SOEventBus** | Core | ScriptableObject 事件通道：发布方与订阅方只依赖通道资产；Inspector 扩展可手动触发事件、查看当前监听者数量 | [README](Packages/com.ew.ew-framework/Core/SOEventBus/README.md) | ✓ |

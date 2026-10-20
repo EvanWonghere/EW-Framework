@@ -8,7 +8,8 @@
 |------|------|------|
 | **StateMachineExampleDriver** | 状态机宿主（Idle/Patrol/Chase + Push/Pop Pause） | 拖入 `target` 引用后运行；按 **Esc** 进入/退出 Pause（Input System）。 |
 | **StateMachineExampleTarget** | 可控目标（供 Chase 追逐） | **WASD** 或 **方向键** 移动（Input System）。 |
-| **StateMachineExampleHud** | Game 视图 HUD | 显示当前状态、最近切换原因/时间、与目标距离。 |
+| **StateMachineExampleHud** | Game 视图 HUD | 显示当前状态、最近几次切换（时间与原因）、与目标距离。 |
+| **StateMachineExampleVisuals** | 状态可视化（仅表现层） | 挂在追逐者上：按当前状态给追逐者着色（Idle 灰 / Patrol 绿 / Chase 红 / Pause 黄），并在地面画出追逐范围圈。 |
 
 ## 示例场景构思：`Demo_StateMachine_Basics`
 
