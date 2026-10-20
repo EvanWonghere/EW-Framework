@@ -59,6 +59,8 @@
 
 部分示例使用 **Input System**、**TextMesh Pro**；若导入后编译报错，请在目标项目的 `manifest.json` 中补充 `com.unity.inputsystem` 与 TextMesh Pro / `com.unity.ugui` 等（与目标 Unity 版本一致）。
 
+`EventBusDemo` 与 `SharedVariablesDemo` 的 UI 使用 TextMesh Pro 默认字体。新工程若尚未导入 TMP 资源，请先执行 **Window > TextMeshPro > Import TMP Essential Resources**，再导入这两个示例，否则场景中的文字会丢失字体与材质引用。
+
 ## 程序集
 
 - `EW.Framework.Core`：`Core/`
